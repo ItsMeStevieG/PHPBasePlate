@@ -1,0 +1,65 @@
+.logo128 {
+    display: block;
+    height: 128px;
+    margin: 20px;
+    float: left;
+}
+
+.logo200 {
+    height: 200px;
+    margin: 20px;
+}
+
+.welcometext {
+    margin-top: 100px;
+    color: white !important;
+    display: block;
+}
+
+.maincontainer {
+    margin:20px;
+    padding: 15px;
+    background-color: #666699 !important;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.installcontainer {
+    display: block;
+    margin:20px;
+    margin-top: 50px;
+    padding: 15px;
+    background-color: white !important;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.footer {
+    width: 100%;
+    color: white;
+    display:table;
+    margin:0 auto;
+    font-size: 12px;    
+}
+
+/* enable absolute positioning */
+.inner-addon {
+  position: relative;
+}
+
+/* style glyph */
+.inner-addon .glyphicon {
+  position: absolute;
+  padding: 10px;
+  pointer-events: none;
+}
+
+/* align glyph */
+.left-addon .glyphicon  { left:  0px;}
+.right-addon .glyphicon { right: 0px;}
+
+/* add padding  */
+.left-addon input  { padding-left:  30px; }
+.right-addon input { padding-right: 30px; }
