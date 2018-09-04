@@ -1,8 +1,8 @@
 # PHPBasePlate
 
 PHPBasePlate SF: https://sourceforge.net/projects/phpbaseplate/
-
 PHPBasePlate SF Wiki URL: https://sourceforge.net/p/phpbaseplate/wiki/Home/
+
 ----------------------------------------------
 
 PHPBasePlate is a Framework to make a fully portable website which can be easily moved between servers.
