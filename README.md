@@ -1,8 +1,9 @@
 # PHPBasePlate
 
-PHPBasePlate SF: https://sourceforge.net/projects/phpbaseplate/
+[PHPBasePlate on SourceForge](https://sourceforge.net/projects/phpbaseplate/)
 
-PHPBasePlate SF Wiki URL: https://sourceforge.net/p/phpbaseplate/wiki/Home/
+[PHPBasePlate SourceForge Wiki](https://sourceforge.net/p/phpbaseplate/wiki/Home/)
+[PHPBasePlate GitHub Wiki](https://github.com/ItsMeStevieG/PHPBasePlate/wiki)
 
 ----------------------------------------------
 
