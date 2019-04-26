@@ -1,6 +1,8 @@
 <?php
 require_once("config.php");
 
+$content="<h2>Welcome</h2>";
+
 $multiset=array(
     "PageTitle"=>"Welcome to Steven-Graham.com",
     "MetaDescription"=>"Steven-Graham.com - I.T. services, sales, support, remote assistance, web design, web hosting, troubleshooting, networking, custom built computers and more.",
