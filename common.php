@@ -14,7 +14,7 @@ $elog=new Blunder(NULL,LOC_LOGPATH); //Instantiate Blunder Error Handler
 if(DB_ENABLE==true)
 {
     $dbo=OOPSQL::getInstance(); //Create MySQL DB Instance
-    $dbo->connect($cfg[LOC]["DB_HOSTNAME"], $cfg[LOC]["DB_USERNAME"], $cfg[LOC]["DB_PASSWORD"], $cfg[LOC]["DB_DATABASE"]); //Connect to DB and get Connection Object
+    $dbo->connect($CFG[LOC]["DB_HOSTNAME"], $CFG[LOC]["DB_USERNAME"], $CFG[LOC]["DB_PASSWORD"], $CFG[LOC]["DB_DATABASE"]); //Connect to DB and get Connection Object
 }
 
 $template=new BluePrint(THEME_PATH); //BluePrint Theme Switcher
