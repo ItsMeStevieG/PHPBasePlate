@@ -15,7 +15,7 @@ class TimeMachine {
             {
                 if(strstr($tz,"/"))
                 {
-                    $TMP=explode("/",$tz);
+                    $TMP=explode("/",$tz,2);
                 }
                 else
                 {
@@ -29,7 +29,7 @@ class TimeMachine {
         {
             foreach($TIMEZONES as $tz)
             {
-                $TMP=explode("/",$tz);
+                $TMP=explode("/",$tz,2);
                 if(!in_array($TMP[0],$RETURN))
                 {
                     $RETURN[]=$TMP[0];
