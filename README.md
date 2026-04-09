@@ -150,24 +150,24 @@ PHPBasePlate/
 │   └── Settings/           # Settings and menus
 ├── bootstrap/              # App bootstrap and global helpers
 ├── bin/                    # CLI tools (setup, migrate, check)
-├── config/                 # Configuration files (app, database, view, auth, paths)
+├── config/                 # Configuration files
 ├── database/
 │   ├── migrations/         # 18 SQL migration files
 │   └── seeds/              # 4 PHP seed files
-├── docs/                   # Planning and user documentation (11 documents)
+├── docs/                   # Documentation
 ├── public/                 # Web root (index.php, .htaccess, uploads/)
 ├── resources/
 │   ├── schemas/            # Content type JSON definitions
 │   └── views/              # Twig templates (admin, frontend, layouts, partials)
 ├── routes/                 # Route definitions (web.php, admin.php, api.php)
 ├── storage/                # Runtime: logs, cache, sessions
-└── tests/                  # PHPUnit tests (71 tests, 126 assertions)
+└── tests/                  # PHPUnit tests
 ```
 
 ## CLI Tools
 
 ```bash
-php bin/check.php           # Environment check (24 checks)
+php bin/check.php           # Environment check (PHP, extensions, paths, schemas)
 php bin/setup.php           # Full setup: migrate + seed + schema sync
 php bin/migrate.php migrate # Run migrations only
 php bin/migrate.php seed    # Run seeds only
@@ -201,23 +201,14 @@ php bin/setup.php
 3. Upload `vendor/` if Composer is not available on host
 4. Configure `.env` and run `php bin/setup.php`
 
-See [docs/10-installation-guide.md](docs/10-installation-guide.md) for Apache/Nginx configs, production checklist, and troubleshooting.
+See [docs/installation.md](docs/installation.md) for Apache/Nginx configs, production checklist, and troubleshooting.
 
 ## Documentation
 
 | Document | Description |
 |---|---|
-| [Product Vision](docs/01-product-vision.md) | Goals, positioning, principles |
-| [PRD](docs/02-prd.md) | Features, actors, acceptance criteria |
-| [System Architecture](docs/03-system-architecture.md) | Modules, request lifecycle, service layer |
-| [Database Schema](docs/04-database-schema.md) | All 18 tables, relations, JSON payload design |
-| [API Spec](docs/05-api-spec.md) | Endpoints, response format, auth, filtering |
-| [Folder Structure](docs/06-folder-structure.md) | Directory layout, namespaces, conventions |
-| [Implementation Plan](docs/07-implementation-plan.md) | 8-phase build order with task breakdown |
-| [Execution Guide](docs/08-claude-code-execution-guide.md) | Development workflow and coding rules |
-| [Deployment](docs/09-deployment-and-environments.md) | Environment targets, hosting strategies |
-| [Installation Guide](docs/10-installation-guide.md) | Step-by-step setup, server configs, troubleshooting |
-| [User Guide](docs/11-user-guide.md) | Content types, admin, API, Twig, CLI, extending |
+| [Installation Guide](docs/installation.md) | Prerequisites, step-by-step setup, server configs, production checklist, troubleshooting |
+| [User Guide](docs/user-guide.md) | Content types, field types, admin panel, REST API, Twig functions, CLI tools, extending |
 
 ## License
 
