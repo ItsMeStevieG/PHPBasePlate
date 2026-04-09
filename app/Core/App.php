@@ -282,13 +282,17 @@ class App
     }
 
     /**
-     * Determine storage driver: json (default), database, or auto (try DB, fall back to json).
+     * Determine storage driver:
+     *   json     - flat files only (default)
+     *   mysql    - MySQL only, no fallback (fails hard if DB unavailable)
+     *   database - alias for mysql
+     *   auto     - try MySQL, fall back to json if connection fails
      */
     private function resolveStorageDriver(): string
     {
         $driver = strtolower((string) $this->config->get('app.storage_driver', 'json'));
 
-        if ($driver === 'database') {
+        if ($driver === 'mysql' || $driver === 'database') {
             return 'database';
         }
 

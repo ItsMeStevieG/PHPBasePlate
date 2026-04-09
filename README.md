@@ -71,14 +71,14 @@ PHPBasePlate supports two storage backends, configured via `STORAGE_DRIVER` in `
 | Driver | Default | Description |
 |---|---|---|
 | `json` | Yes | JSON flat files in `storage/data/`. No database needed. Works out of the box. |
-| `database` | No | MySQL/MariaDB. Full relational storage. Requires database setup and migrations. |
-| `auto` | No | Tries database first, falls back to JSON if connection fails. |
+| `mysql` | No | MySQL/MariaDB only. No fallback - fails hard if DB is unavailable. |
+| `auto` | No | Tries MySQL first, falls back to JSON if connection fails. Best of both worlds. |
 
 ### Switching to MySQL
 
 ```bash
 # 1. Edit .env
-STORAGE_DRIVER=database
+STORAGE_DRIVER=mysql
 DB_HOST=localhost
 DB_DATABASE=phpbaseplate
 DB_USERNAME=root
@@ -93,7 +93,7 @@ php bin/setup.php
 
 ### Auto-failover
 
-Set `STORAGE_DRIVER=auto` to try the database first and automatically fall back to JSON flat files if the database connection fails. Useful for development or resilience.
+Set `STORAGE_DRIVER=auto` to try MySQL first and automatically fall back to JSON flat files if the connection fails. Useful for development or resilience.
 
 ### Keeping them in sync
 
@@ -208,13 +208,14 @@ PHPBasePlate/
 ## CLI Tools
 
 ```bash
-php bin/check.php           # Environment check (PHP, extensions, paths, schemas)
-php bin/setup.php           # Full setup: always seeds JSON + DB if configured
-php bin/migrate.php migrate # Run database migrations only
-php bin/migrate.php seed    # Run database seeds only
-php bin/sync.php status     # Show record counts in both JSON and database
-php bin/sync.php db-to-json # Snapshot database to JSON (failover backup)
-php bin/sync.php json-to-db # Import JSON data into database
+php bin/check.php              # Environment check (PHP, extensions, paths, schemas)
+php bin/setup.php              # Full setup: always seeds JSON + DB if configured
+php bin/passwd.php email pass  # Change a user's password
+php bin/migrate.php migrate    # Run database migrations only
+php bin/migrate.php seed       # Run database seeds only
+php bin/sync.php status        # Show record counts in both JSON and database
+php bin/sync.php db-to-json    # Snapshot database to JSON (failover backup)
+php bin/sync.php json-to-db    # Import JSON data into database
 ```
 
 ## Testing

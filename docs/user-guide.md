@@ -314,7 +314,7 @@ Checks PHP version, extensions, paths, writable directories, config files, and s
 php bin/setup.php
 ```
 
-Seeds JSON flat files and (if `STORAGE_DRIVER=database`) runs migrations and database seeders. Always seeds both stores so failover data is available.
+Seeds JSON flat files and (if `STORAGE_DRIVER=mysql`) runs migrations and database seeders. Always seeds both stores so failover data is available.
 
 ### Migrations Only (database driver)
 
@@ -336,7 +336,7 @@ php bin/sync.php db-to-json   # Export database to JSON (manual snapshot)
 php bin/sync.php json-to-db   # Import JSON into database (when switching drivers)
 ```
 
-When using `STORAGE_DRIVER=database`, writes automatically go to both MySQL and JSON (dual-write), so manual sync is usually not needed. Use these commands when switching drivers or verifying data consistency.
+When using `STORAGE_DRIVER=mysql`, writes automatically go to both MySQL and JSON (dual-write), so manual sync is usually not needed. Use these commands when switching drivers or verifying data consistency.
 
 ---
 

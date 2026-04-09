@@ -85,7 +85,7 @@ This will:
 3. Run all 4 seeders (roles + permissions, admin user, default settings, default menus)
 4. Sync content type schemas
 
-When using `STORAGE_DRIVER=database`, setup also runs SQL migrations and database seeders.
+When using `STORAGE_DRIVER=mysql`, setup also runs SQL migrations and database seeders.
 
 JSON files are always seeded regardless of driver, so failover data is always available.
 
@@ -129,7 +129,7 @@ All data stored as JSON files in `storage/data/`. No database required. Ideal fo
 ### MySQL / MariaDB
 
 ```ini
-STORAGE_DRIVER=database
+STORAGE_DRIVER=mysql
 ```
 
 Full relational database storage. Requires a MySQL/MariaDB database and running `php bin/setup.php` to execute migrations.
@@ -152,7 +152,7 @@ Tries to connect to the database at boot. If the connection fails, automatically
 **JSON to Database:**
 ```bash
 # 1. Set up MySQL and configure .env
-STORAGE_DRIVER=database
+STORAGE_DRIVER=mysql
 
 # 2. Run setup (creates tables + seeds)
 php bin/setup.php
