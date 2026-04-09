@@ -4,9 +4,9 @@
 
 - **PHP 8.3+** with the following extensions:
   - pdo, pdo_mysql, mbstring, json, fileinfo, openssl, session
-- **MariaDB 10.4+** or **MySQL 8+**
 - **Composer 2+**
 - **Apache** with `mod_rewrite` enabled (or Nginx with equivalent config)
+- **MariaDB 10.4+** or **MySQL 8+** (optional - PHPBasePlate runs on JSON flat files by default)
 
 ## Installation
 
@@ -44,6 +44,9 @@ APP_DEBUG=true         # true for development, false for production
 APP_URL=http://localhost:8000
 APP_TIMEZONE=Australia/Sydney
 
+# Storage: json (default, no DB needed), database, or auto (try DB, fall back to json)
+STORAGE_DRIVER=json
+
 DB_HOST=localhost
 DB_PORT=3306
 DB_DATABASE=phpbaseplate
@@ -54,7 +57,9 @@ SESSION_DRIVER=file
 LOG_CHANNEL=file
 ```
 
-### 4. Create the database
+### 4. Create the database (only if using database driver)
+
+Skip this step if using `STORAGE_DRIVER=json` (the default).
 
 ```sql
 CREATE DATABASE phpbaseplate CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -78,7 +83,11 @@ This will:
 1. Test the database connection
 2. Run all 18 migrations (users, roles, permissions, content tables, media, settings, menus, activity log)
 3. Run all 4 seeders (roles + permissions, admin user, default settings, default menus)
-4. Sync content type schemas to the database
+4. Sync content type schemas
+
+When using `STORAGE_DRIVER=database`, setup also runs SQL migrations and database seeders.
+
+JSON files are always seeded regardless of driver, so failover data is always available.
 
 ### 7. Start the development server
 
@@ -100,6 +109,74 @@ php -S localhost:8000 -t public/
 - Password: `admin`
 
 **Change the admin password after first login.**
+
+**Note:** Login is rate-limited to 5 attempts per 15 minutes for brute force protection.
+
+---
+
+## Storage Drivers
+
+PHPBasePlate supports two storage backends. Set `STORAGE_DRIVER` in `.env`:
+
+### JSON Flat Files (default)
+
+```ini
+STORAGE_DRIVER=json
+```
+
+All data stored as JSON files in `storage/data/`. No database required. Ideal for development, small sites, or getting started quickly.
+
+### MySQL / MariaDB
+
+```ini
+STORAGE_DRIVER=database
+```
+
+Full relational database storage. Requires a MySQL/MariaDB database and running `php bin/setup.php` to execute migrations.
+
+When using the database driver, **every write also updates the JSON files automatically** (dual-write). This means:
+- JSON files are always a live backup of the database
+- You can switch to JSON mode instantly if the database goes down
+- You can switch back to database mode at any time
+
+### Auto-Failover
+
+```ini
+STORAGE_DRIVER=auto
+```
+
+Tries to connect to the database at boot. If the connection fails, automatically falls back to JSON flat files. A warning is logged. Useful for resilience.
+
+### Switching Drivers
+
+**JSON to Database:**
+```bash
+# 1. Set up MySQL and configure .env
+STORAGE_DRIVER=database
+
+# 2. Run setup (creates tables + seeds)
+php bin/setup.php
+
+# 3. Import existing JSON data into MySQL
+php bin/sync.php json-to-db
+```
+
+**Database to JSON:**
+```bash
+# 1. Ensure JSON is current (should be automatic via dual-write)
+php bin/sync.php status
+
+# 2. Switch driver
+STORAGE_DRIVER=json
+```
+
+### Sync Tool
+
+```bash
+php bin/sync.php status       # Compare record counts in both stores
+php bin/sync.php db-to-json   # Full export: database -> JSON files
+php bin/sync.php json-to-db   # Full import: JSON files -> database
+```
 
 ---
 

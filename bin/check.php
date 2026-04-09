@@ -48,7 +48,7 @@ check('resources/views/ exists', is_dir($basePath . '/resources/views'));
 
 // Writable paths
 echo "\nWritable directories:\n";
-$writablePaths = ['storage/cache', 'storage/logs', 'storage/sessions', 'storage/temp', 'public/uploads'];
+$writablePaths = ['storage/cache', 'storage/logs', 'storage/sessions', 'storage/temp', 'storage/data', 'public/uploads'];
 foreach ($writablePaths as $path) {
     $full = $basePath . '/' . $path;
     $writable = is_dir($full) && is_writable($full);
