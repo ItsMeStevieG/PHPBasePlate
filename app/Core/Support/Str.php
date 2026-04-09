@@ -9,8 +9,9 @@ class Str
     public static function slug(string $value, string $separator = '-'): string
     {
         $value = mb_strtolower($value, 'UTF-8');
-        $value = preg_replace('/[^\p{L}\p{N}\s]/u', '', $value);
+        $value = preg_replace('/[^\p{L}\p{N}\s\-]/u', '', $value);
         $value = preg_replace('/[\s]+/', $separator, trim($value));
+        $value = preg_replace('/' . preg_quote($separator, '/') . '+/', $separator, $value);
 
         return $value;
     }
