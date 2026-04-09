@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect everything to public/ subdirectory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Deny direct access to sensitive files
+<FilesMatch "\.(env|json|lock|md|xml|yml|yaml|log|sql|sh|php)$">
+    Require all denied
+</FilesMatch>
+
+# Allow public/index.php through the rewrite above
+<Files "index.php">
+    Require all granted
+</Files>
+
+# Deny access to hidden files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Deny access to sensitive directories
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|bootstrap|config|database|docs|storage|tests|vendor|bin|resources)/ - [F,L]
+</IfModule>

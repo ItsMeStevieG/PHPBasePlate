@@ -1,5 +1,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Force HTTPS (uncomment in production)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Front controller - route all non-file/non-directory requests to index.php
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ index.php [QSA,L]
@@ -9,3 +15,19 @@
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# Block PHP execution in uploads directory
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/uploads/
+    RewriteRule \.(php|phtml|php3|php4|php5|phps)$ - [F,L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
