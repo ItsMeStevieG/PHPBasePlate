@@ -1,0 +1,92 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}Edit {{ schema.label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit {{ schema.label }}: {{ entry.title | default('(untitled)') }}</h2>
+    <a href="/admin/content/{{ type }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to list
+    </a>
+</div>
+
+{% if errors is not empty %}
+<div class="alert alert-danger">
+    <strong>Validation errors:</strong>
+    <ul class="mb-0 mt-1">
+        {% for field, messages in errors %}
+            {% for msg in messages %}
+            <li>{{ msg }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<form method="post" action="/admin/content/{{ type }}/{{ entry.id }}" enctype="multipart/form-data">
+    <input type="hidden" name="_token" value="{{ csrf_token }}">
+    <input type="hidden" name="_method" value="PUT">
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" name="title" id="title" class="form-control"
+                               value="{{ old.title | default(entry.title) }}" required>
+                    </div>
+
+                    {% for field in fields %}
+                        {% set fieldValue = old[field.name] | default(entry.payload[field.name] | default('')) %}
+                        {% include "admin/partials/field.twig" with {
+                            field: field,
+                            value: fieldValue,
+                            errors: errors[field.name] | default([])
+                        } %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">Publishing</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="draft" {{ (old.status | default(entry.status)) == 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="published" {{ (old.status | default(entry.status)) == 'published' ? 'selected' : '' }}>Published</option>
+                            <option value="archived" {{ (old.status | default(entry.status)) == 'archived' ? 'selected' : '' }}>Archived</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="summary" class="form-label">Summary</label>
+                        <textarea name="summary" id="summary" class="form-control" rows="3">{{ old.summary | default(entry.summary) }}</textarea>
+                    </div>
+
+                    <p class="text-muted small mb-1">Created: {{ entry.created_at }}</p>
+                    <p class="text-muted small mb-0">Updated: {{ entry.updated_at }}</p>
+                    {% if entry.published_at %}
+                    <p class="text-muted small mb-0">Published: {{ entry.published_at }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-2">
+                <i class="bi bi-save"></i> Save Changes
+            </button>
+
+            <form method="post" action="/admin/content/{{ type }}/{{ entry.id }}/delete"
+                  onsubmit="return confirm('Are you sure you want to delete this entry?')">
+                <input type="hidden" name="_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-trash"></i> Delete Entry
+                </button>
+            </form>
+        </div>
+    </div>
+</form>
+{% endblock %}

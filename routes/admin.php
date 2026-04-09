@@ -2,17 +2,15 @@
 
 declare(strict_types=1);
 
+use ItsMeStevieG\PHPBasePlate\Admin\Controllers\ContentController;
+use ItsMeStevieG\PHPBasePlate\Admin\Controllers\DashboardController;
 use ItsMeStevieG\PHPBasePlate\Auth\Controllers\LoginController;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\AuthMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\CsrfMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\GuestMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\StartSessionMiddleware;
-use ItsMeStevieG\PHPBasePlate\Core\Http\Request;
-use ItsMeStevieG\PHPBasePlate\Core\Http\Response;
-use ItsMeStevieG\PHPBasePlate\Core\Support\Session;
 
 /** @var \ItsMeStevieG\PHPBasePlate\Core\Routing\Router $router */
-/** @var \ItsMeStevieG\PHPBasePlate\Core\App $app */
 
 // Guest-only routes (login page)
 $router->group(['prefix' => '/admin'], function ($router) {
@@ -24,18 +22,26 @@ $router->group(['prefix' => '/admin'], function ($router) {
 });
 
 // Authenticated admin routes
-$currentApp = $app;
-$router->group(['prefix' => '/admin', 'middleware' => [StartSessionMiddleware::class, AuthMiddleware::class]], function ($router) use ($currentApp) {
-    $router->get('', function (Request $request) use ($currentApp): Response {
-        $session = $currentApp->getContainer()->get(Session::class);
-        $html = view('admin/dashboard', [
-            'title' => 'Dashboard',
-            'user' => $request->getAttribute('user'),
-            'csrf_token' => $session->token(),
-        ]);
-        return new Response($html);
-    }, 'admin.dashboard');
+$router->group(['prefix' => '/admin', 'middleware' => [StartSessionMiddleware::class, AuthMiddleware::class]], function ($router) {
+    // Dashboard
+    $router->get('', [DashboardController::class, 'index'], 'admin.dashboard');
 
+    // Logout
     $router->post('/logout', [LoginController::class, 'logout'], 'admin.logout')
+        ->middleware([CsrfMiddleware::class]);
+
+    // Content CRUD
+    $router->get('/content/{type}', [ContentController::class, 'index'], 'admin.content.index');
+    $router->get('/content/{type}/create', [ContentController::class, 'create'], 'admin.content.create');
+    $router->post('/content/{type}', [ContentController::class, 'store'], 'admin.content.store')
+        ->middleware([CsrfMiddleware::class]);
+    $router->get('/content/{type}/{id}/edit', [ContentController::class, 'edit'], 'admin.content.edit');
+    $router->post('/content/{type}/{id}', [ContentController::class, 'update'], 'admin.content.update')
+        ->middleware([CsrfMiddleware::class]);
+    $router->post('/content/{type}/{id}/delete', [ContentController::class, 'delete'], 'admin.content.delete')
+        ->middleware([CsrfMiddleware::class]);
+    $router->post('/content/{type}/{id}/publish', [ContentController::class, 'publish'], 'admin.content.publish')
+        ->middleware([CsrfMiddleware::class]);
+    $router->post('/content/{type}/{id}/unpublish', [ContentController::class, 'unpublish'], 'admin.content.unpublish')
         ->middleware([CsrfMiddleware::class]);
 });

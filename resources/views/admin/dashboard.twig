@@ -7,29 +7,17 @@
 <p class="text-muted">Welcome back, {{ user.name }}.</p>
 
 <div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card text-bg-primary mb-3">
+    {% for name, ct in content_types %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Content</h5>
-                <p class="card-text">Manage content types and entries.</p>
+                <h5 class="card-title"><i class="bi {{ ct.admin.icon | default('bi-file-text') }}"></i> {{ ct.label }}</h5>
+                <p class="card-text text-muted">{{ ct.mode | capitalize }} content type</p>
+                <a href="/admin/content/{{ name }}" class="btn btn-primary btn-sm">Manage</a>
+                <a href="/admin/content/{{ name }}/create" class="btn btn-outline-primary btn-sm">Create New</a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-bg-secondary mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Media</h5>
-                <p class="card-text">Upload and manage files.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-bg-dark mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Settings</h5>
-                <p class="card-text">Configure site settings.</p>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -1,0 +1,75 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}Create {{ schema.label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Create {{ schema.label }}</h2>
+    <a href="/admin/content/{{ type }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to list
+    </a>
+</div>
+
+{% if errors is not empty %}
+<div class="alert alert-danger">
+    <strong>Validation errors:</strong>
+    <ul class="mb-0 mt-1">
+        {% for field, messages in errors %}
+            {% for msg in messages %}
+            <li>{{ msg }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<form method="post" action="/admin/content/{{ type }}" enctype="multipart/form-data">
+    <input type="hidden" name="_token" value="{{ csrf_token }}">
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" name="title" id="title" class="form-control"
+                               value="{{ old.title | default('') }}" required>
+                    </div>
+
+                    {% for field in fields %}
+                        {% include "admin/partials/field.twig" with {
+                            field: field,
+                            value: old[field.name] | default(''),
+                            errors: errors[field.name] | default([])
+                        } %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">Publishing</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="draft" {{ old.status | default('draft') == 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="published" {{ old.status == 'published' ? 'selected' : '' }}>Published</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="summary" class="form-label">Summary</label>
+                        <textarea name="summary" id="summary" class="form-control" rows="3">{{ old.summary | default('') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-save"></i> Create Entry
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

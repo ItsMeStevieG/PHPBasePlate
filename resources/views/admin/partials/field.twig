@@ -1,0 +1,152 @@
+{# Generic field renderer - dispatches by field.type #}
+{% set fieldId = 'field_' ~ field.name %}
+{% set hasError = errors is not empty %}
+
+{% if field.type == 'text' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="text" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           {% if field.config.max_length is defined %}maxlength="{{ field.config.max_length }}"{% endif %}
+           {% if field.is_required %}required{% endif %}>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'slug' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="text" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control font-monospace {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           {% if field.is_required %}required{% endif %}
+           placeholder="auto-generated-from-title">
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+    <div class="form-text">Leave blank to auto-generate from title.</div>
+</div>
+
+{% elseif field.type == 'textarea' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <textarea name="{{ field.name }}" id="{{ fieldId }}" rows="4"
+              class="form-control {{ hasError ? 'is-invalid' : '' }}"
+              {% if field.is_required %}required{% endif %}>{{ value }}</textarea>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'richtext' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <textarea name="{{ field.name }}" id="{{ fieldId }}" rows="10"
+              class="form-control {{ hasError ? 'is-invalid' : '' }}"
+              {% if field.is_required %}required{% endif %}>{{ value }}</textarea>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+    <div class="form-text">Rich text editor will be enhanced in a future update.</div>
+</div>
+
+{% elseif field.type == 'number' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="number" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           {% if field.config.min is defined %}min="{{ field.config.min }}"{% endif %}
+           {% if field.config.max is defined %}max="{{ field.config.max }}"{% endif %}
+           {% if field.config.step is defined %}step="{{ field.config.step }}"{% endif %}
+           {% if field.is_required %}required{% endif %}>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'boolean' %}
+<div class="mb-3">
+    <div class="form-check form-switch">
+        <input type="hidden" name="{{ field.name }}" value="0">
+        <input type="checkbox" name="{{ field.name }}" id="{{ fieldId }}"
+               class="form-check-input" value="1"
+               {{ value ? 'checked' : '' }}>
+        <label for="{{ fieldId }}" class="form-check-label">{{ field.label }}</label>
+    </div>
+</div>
+
+{% elseif field.type == 'date' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="date" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           {% if field.is_required %}required{% endif %}>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'datetime' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="datetime-local" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           {% if field.is_required %}required{% endif %}>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'select' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <select name="{{ field.name }}" id="{{ fieldId }}"
+            class="form-select {{ hasError ? 'is-invalid' : '' }}"
+            {% if field.is_required %}required{% endif %}>
+        <option value="">-- Select --</option>
+        {% for option in field.config.options | default([]) %}
+        <option value="{{ option.value }}" {{ value == option.value ? 'selected' : '' }}>{{ option.label }}</option>
+        {% endfor %}
+    </select>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+</div>
+
+{% elseif field.type == 'image' or field.type == 'file' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="number" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control {{ hasError ? 'is-invalid' : '' }}"
+           value="{{ value }}"
+           placeholder="Media ID (media manager coming soon)">
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+    <div class="form-text">Enter media file ID. Full media picker coming in Phase 7.</div>
+</div>
+
+{% elseif field.type == 'json' or field.type == 'repeater' %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }}{% if field.is_required %} <span class="text-danger">*</span>{% endif %}</label>
+    <textarea name="{{ field.name }}" id="{{ fieldId }}" rows="6"
+              class="form-control font-monospace {{ hasError ? 'is-invalid' : '' }}"
+              {% if field.is_required %}required{% endif %}>{{ value is iterable ? value | json_encode(constant('JSON_PRETTY_PRINT')) : value }}</textarea>
+    {% if hasError %}
+    <div class="invalid-feedback">{% for e in errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+    <div class="form-text">Enter valid JSON.</div>
+</div>
+
+{% else %}
+<div class="mb-3">
+    <label for="{{ fieldId }}" class="form-label">{{ field.label }} <span class="badge bg-secondary">{{ field.type }}</span></label>
+    <input type="text" name="{{ field.name }}" id="{{ fieldId }}"
+           class="form-control" value="{{ value }}">
+</div>
+{% endif %}

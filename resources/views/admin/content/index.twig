@@ -1,0 +1,132 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}{{ schema.label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi {{ schema.admin.icon | default('bi-file-text') }}"></i> {{ schema.label }}</h2>
+    <a href="/admin/content/{{ type }}/create" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Create New
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="/admin/content/{{ type }}" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search..."
+                       value="{{ filters.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="draft" {{ filters.status == 'draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="published" {{ filters.status == 'published' ? 'selected' : '' }}>Published</option>
+                    <option value="archived" {{ filters.status == 'archived' ? 'selected' : '' }}>Archived</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">Filter</button>
+            </div>
+            {% if filters.search or filters.status %}
+            <div class="col-md-2">
+                <a href="/admin/content/{{ type }}" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Slug</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if entries is empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No entries found.</td>
+            </tr>
+            {% endif %}
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.id }}</td>
+                <td><a href="/admin/content/{{ type }}/{{ entry.id }}/edit">{{ entry.title | default('(untitled)') }}</a></td>
+                <td><code>{{ entry.slug }}</code></td>
+                <td>
+                    {% if entry.status == 'published' %}
+                        <span class="badge bg-success">Published</span>
+                    {% elseif entry.status == 'archived' %}
+                        <span class="badge bg-secondary">Archived</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Draft</span>
+                    {% endif %}
+                </td>
+                <td>{{ entry.created_at }}</td>
+                <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                        <a href="/admin/content/{{ type }}/{{ entry.id }}/edit" class="btn btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if entry.status == 'draft' %}
+                        <form method="post" action="/admin/content/{{ type }}/{{ entry.id }}/publish" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-outline-success" title="Publish">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                        {% elseif entry.status == 'published' %}
+                        <form method="post" action="/admin/content/{{ type }}/{{ entry.id }}/unpublish" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-outline-warning" title="Unpublish">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="/admin/content/{{ type }}/{{ entry.id }}/delete"
+                              class="d-inline" onsubmit="return confirm('Delete this entry?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.total_pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if pagination.page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="/admin/content/{{ type }}?page={{ pagination.page - 1 }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% for p in range(1, pagination.total_pages) %}
+        <li class="page-item {{ p == pagination.page ? 'active' : '' }}">
+            <a class="page-link" href="/admin/content/{{ type }}?page={{ p }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+
+        {% if pagination.page < pagination.total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="/admin/content/{{ type }}?page={{ pagination.page + 1 }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.status %}&status={{ filters.status }}{% endif %}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+<p class="text-center text-muted small">{{ pagination.total }} total entries</p>
+{% endif %}
+{% endblock %}
