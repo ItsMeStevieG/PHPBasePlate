@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Core;
 
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\AuthMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\ApiTokenMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\CsrfMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\GuestMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\RoleMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Middleware\StartSessionMiddleware;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\ApiTokenRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\PermissionRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\RoleRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\UserRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Services\ApiTokenService;
+use ItsMeStevieG\PHPBasePlate\Auth\Services\AuthService;
+use ItsMeStevieG\PHPBasePlate\Auth\Services\RbacService;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Env;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
@@ -15,6 +28,7 @@ use ItsMeStevieG\PHPBasePlate\Core\Http\Request;
 use ItsMeStevieG\PHPBasePlate\Core\Http\Response;
 use ItsMeStevieG\PHPBasePlate\Core\Logging\Logger;
 use ItsMeStevieG\PHPBasePlate\Core\Routing\Router;
+use ItsMeStevieG\PHPBasePlate\Core\Support\Session;
 use ItsMeStevieG\PHPBasePlate\Core\View\ViewRenderer;
 
 class App
@@ -83,6 +97,64 @@ class App
                 $this->basePath . '/resources/views',
                 $cachePath,
             );
+        });
+
+        // Register session
+        $session = new Session();
+        $this->container->instance(Session::class, $session);
+
+        // Register auth repositories (lazy)
+        $this->container->singleton(UserRepository::class, function (): UserRepository {
+            return new UserRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(RoleRepository::class, function (): RoleRepository {
+            return new RoleRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(PermissionRepository::class, function (): PermissionRepository {
+            return new PermissionRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(ApiTokenRepository::class, function (): ApiTokenRepository {
+            return new ApiTokenRepository($this->container->get(Connection::class));
+        });
+
+        // Register auth services (lazy)
+        $this->container->singleton(AuthService::class, function (): AuthService {
+            return new AuthService(
+                $this->container->get(UserRepository::class),
+                $this->container->get(Session::class),
+            );
+        });
+        $this->container->singleton(RbacService::class, function (): RbacService {
+            return new RbacService(
+                $this->container->get(RoleRepository::class),
+                $this->container->get(PermissionRepository::class),
+            );
+        });
+        $this->container->singleton(ApiTokenService::class, function (): ApiTokenService {
+            return new ApiTokenService($this->container->get(ApiTokenRepository::class));
+        });
+
+        // Register middleware instances (lazy)
+        $this->container->singleton(StartSessionMiddleware::class, function (): StartSessionMiddleware {
+            return new StartSessionMiddleware($this->container->get(Session::class));
+        });
+        $this->container->singleton(AuthMiddleware::class, function (): AuthMiddleware {
+            return new AuthMiddleware($this->container->get(AuthService::class));
+        });
+        $this->container->singleton(GuestMiddleware::class, function (): GuestMiddleware {
+            return new GuestMiddleware($this->container->get(AuthService::class));
+        });
+        $this->container->singleton(CsrfMiddleware::class, function (): CsrfMiddleware {
+            return new CsrfMiddleware($this->container->get(Session::class));
+        });
+        $this->container->singleton(RoleMiddleware::class, function (): RoleMiddleware {
+            return new RoleMiddleware(
+                $this->container->get(AuthService::class),
+                $this->container->get(RbacService::class),
+            );
+        });
+        $this->container->singleton(ApiTokenMiddleware::class, function (): ApiTokenMiddleware {
+            return new ApiTokenMiddleware($this->container->get(ApiTokenService::class));
         });
 
         // Load routes
