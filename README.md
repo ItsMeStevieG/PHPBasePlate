@@ -34,6 +34,8 @@ No Node.js runtime is required.
 
 ## Quick Start
 
+No database required to get started. PHPBasePlate runs on JSON flat files out of the box.
+
 ```bash
 # 1. Clone and install
 git clone https://github.com/ItsMeStevieG/PHPBasePlate.git
@@ -43,15 +45,11 @@ composer install
 
 # 2. Configure
 cp .env.example .env
-# Edit .env with your database credentials
 
-# 3. Create the database
-mysql -u root -p -e "CREATE DATABASE phpbaseplate CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# 3. Run setup (seeds JSON data files)
+php bin/setup.php
 
-# 4. Check environment
-php bin/check.php
-
-# 5. Run setup (migrations + seeds + schema sync)
+# 4. Start development server
 php bin/setup.php
 
 # 6. Start development server
@@ -65,6 +63,37 @@ php -S localhost:8000 -t public/
 | http://localhost:8000/api/health | API health check |
 
 **Default admin:** `admin@phpbaseplate.local` / `admin` (change after first login)
+
+## Storage Drivers
+
+PHPBasePlate supports two storage backends, configured via `STORAGE_DRIVER` in `.env`:
+
+| Driver | Default | Description |
+|---|---|---|
+| `json` | Yes | JSON flat files in `storage/data/`. No database needed. Works out of the box. |
+| `database` | No | MySQL/MariaDB. Full relational storage. Requires database setup and migrations. |
+| `auto` | No | Tries database first, falls back to JSON if connection fails. |
+
+### Switching to MySQL
+
+```bash
+# 1. Edit .env
+STORAGE_DRIVER=database
+DB_HOST=localhost
+DB_DATABASE=phpbaseplate
+DB_USERNAME=root
+DB_PASSWORD=your_password
+
+# 2. Create the database
+mysql -u root -p -e "CREATE DATABASE phpbaseplate CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 3. Run setup (runs migrations + seeds)
+php bin/setup.php
+```
+
+### Auto-failover
+
+Set `STORAGE_DRIVER=auto` to try the database first and automatically fall back to JSON flat files if the database connection fails. Useful for development or resilience.
 
 ## Creating Content Types
 

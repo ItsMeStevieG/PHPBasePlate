@@ -11,6 +11,10 @@ use ItsMeStevieG\PHPBasePlate\Auth\Middleware\GuestMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\RoleMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\StartSessionMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Repositories\ApiTokenRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\JsonApiTokenRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\JsonPermissionRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\JsonRoleRepository;
+use ItsMeStevieG\PHPBasePlate\Auth\Repositories\JsonUserRepository;
 use ItsMeStevieG\PHPBasePlate\Auth\Repositories\PermissionRepository;
 use ItsMeStevieG\PHPBasePlate\Auth\Repositories\RoleRepository;
 use ItsMeStevieG\PHPBasePlate\Auth\Repositories\UserRepository;
@@ -21,6 +25,9 @@ use ItsMeStevieG\PHPBasePlate\Content\FieldTypes\FieldTypeRegistry;
 use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentEntryRepository;
 use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentRevisionRepository;
 use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentTypeRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\JsonContentEntryRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\JsonContentRevisionRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\JsonContentTypeRepository;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\ContentTypeRegistry;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\SchemaLoader;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\SchemaValidator;
@@ -28,8 +35,11 @@ use ItsMeStevieG\PHPBasePlate\Content\Services\EntryService;
 use ItsMeStevieG\PHPBasePlate\Content\Services\RevisionService;
 use ItsMeStevieG\PHPBasePlate\Content\Services\SchemaService;
 use ItsMeStevieG\PHPBasePlate\Content\Validators\EntryValidator;
+use ItsMeStevieG\PHPBasePlate\Media\Repositories\JsonMediaRepository;
 use ItsMeStevieG\PHPBasePlate\Media\Repositories\MediaRepository;
 use ItsMeStevieG\PHPBasePlate\Media\Services\MediaService;
+use ItsMeStevieG\PHPBasePlate\Settings\Repositories\JsonMenuRepository;
+use ItsMeStevieG\PHPBasePlate\Settings\Repositories\JsonSettingsRepository;
 use ItsMeStevieG\PHPBasePlate\Settings\Repositories\MenuRepository;
 use ItsMeStevieG\PHPBasePlate\Settings\Repositories\SettingsRepository;
 use ItsMeStevieG\PHPBasePlate\Settings\Services\MenuService;
@@ -38,6 +48,7 @@ use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Env;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
 use ItsMeStevieG\PHPBasePlate\Core\Database\Connection;
+use ItsMeStevieG\PHPBasePlate\Core\Database\JsonStore;
 use ItsMeStevieG\PHPBasePlate\Core\Exceptions\ExceptionHandler;
 use ItsMeStevieG\PHPBasePlate\Core\Exceptions\HttpException;
 use ItsMeStevieG\PHPBasePlate\Core\Http\Middleware\MiddlewarePipeline;
@@ -55,6 +66,7 @@ class App
     private Config $config;
     private ?ExceptionHandler $exceptionHandler = null;
     private array $globalMiddleware = [];
+    private string $storageDriver = 'json';
 
     public function __construct(private readonly string $basePath)
     {
@@ -92,7 +104,14 @@ class App
         $this->exceptionHandler->register();
         $this->container->instance(ExceptionHandler::class, $this->exceptionHandler);
 
-        // Register database connection (lazy)
+        // Determine storage driver: json (default) or database
+        $this->storageDriver = $this->resolveStorageDriver();
+
+        // Register JsonStore (always available - used as fallback too)
+        $jsonStore = new JsonStore($this->basePath . '/storage/data');
+        $this->container->instance(JsonStore::class, $jsonStore);
+
+        // Register database connection (lazy, only if driver is database)
         $this->container->singleton(Connection::class, function (): Connection {
             return new Connection(
                 host: $this->config->get('database.host', 'localhost'),
@@ -120,19 +139,8 @@ class App
         $session = new Session();
         $this->container->instance(Session::class, $session);
 
-        // Register auth repositories (lazy)
-        $this->container->singleton(UserRepository::class, function (): UserRepository {
-            return new UserRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(RoleRepository::class, function (): RoleRepository {
-            return new RoleRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(PermissionRepository::class, function (): PermissionRepository {
-            return new PermissionRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(ApiTokenRepository::class, function (): ApiTokenRepository {
-            return new ApiTokenRepository($this->container->get(Connection::class));
-        });
+        // Register repositories (driver-aware)
+        $this->registerRepositories($jsonStore);
 
         // Register auth services (lazy)
         $this->container->singleton(AuthService::class, function (): AuthService {
@@ -152,27 +160,12 @@ class App
         });
 
         // Register middleware instances (lazy)
-        $this->container->singleton(StartSessionMiddleware::class, function (): StartSessionMiddleware {
-            return new StartSessionMiddleware($this->container->get(Session::class));
-        });
-        $this->container->singleton(AuthMiddleware::class, function (): AuthMiddleware {
-            return new AuthMiddleware($this->container->get(AuthService::class));
-        });
-        $this->container->singleton(GuestMiddleware::class, function (): GuestMiddleware {
-            return new GuestMiddleware($this->container->get(AuthService::class));
-        });
-        $this->container->singleton(CsrfMiddleware::class, function (): CsrfMiddleware {
-            return new CsrfMiddleware($this->container->get(Session::class));
-        });
-        $this->container->singleton(RoleMiddleware::class, function (): RoleMiddleware {
-            return new RoleMiddleware(
-                $this->container->get(AuthService::class),
-                $this->container->get(RbacService::class),
-            );
-        });
-        $this->container->singleton(ApiTokenMiddleware::class, function (): ApiTokenMiddleware {
-            return new ApiTokenMiddleware($this->container->get(ApiTokenService::class));
-        });
+        $this->container->singleton(StartSessionMiddleware::class, fn() => new StartSessionMiddleware($this->container->get(Session::class)));
+        $this->container->singleton(AuthMiddleware::class, fn() => new AuthMiddleware($this->container->get(AuthService::class)));
+        $this->container->singleton(GuestMiddleware::class, fn() => new GuestMiddleware($this->container->get(AuthService::class)));
+        $this->container->singleton(CsrfMiddleware::class, fn() => new CsrfMiddleware($this->container->get(Session::class)));
+        $this->container->singleton(RoleMiddleware::class, fn() => new RoleMiddleware($this->container->get(AuthService::class), $this->container->get(RbacService::class)));
+        $this->container->singleton(ApiTokenMiddleware::class, fn() => new ApiTokenMiddleware($this->container->get(ApiTokenService::class)));
 
         // Register content engine
         $fieldTypeRegistry = FieldTypeRegistry::createDefault();
@@ -184,75 +177,38 @@ class App
         $schemaValidator = new SchemaValidator($fieldTypeRegistry);
         $this->container->instance(SchemaValidator::class, $schemaValidator);
 
-        $this->container->singleton(SchemaLoader::class, function () use ($schemaValidator, $contentTypeRegistry, $fieldTypeRegistry): SchemaLoader {
-            return new SchemaLoader(
-                $this->basePath . '/resources/schemas',
-                $schemaValidator,
-                $contentTypeRegistry,
-                $fieldTypeRegistry,
-            );
-        });
+        $this->container->singleton(SchemaLoader::class, fn() => new SchemaLoader(
+            $this->basePath . '/resources/schemas',
+            $schemaValidator,
+            $contentTypeRegistry,
+            $fieldTypeRegistry,
+        ));
 
-        $this->container->singleton(ContentTypeRepository::class, function (): ContentTypeRepository {
-            return new ContentTypeRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(ContentEntryRepository::class, function (): ContentEntryRepository {
-            return new ContentEntryRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(ContentRevisionRepository::class, function (): ContentRevisionRepository {
-            return new ContentRevisionRepository($this->container->get(Connection::class));
-        });
-
-        $this->container->singleton(RevisionService::class, function (): RevisionService {
-            return new RevisionService($this->container->get(ContentRevisionRepository::class));
-        });
-        $this->container->singleton(EntryValidator::class, function () use ($contentTypeRegistry, $fieldTypeRegistry): EntryValidator {
-            return new EntryValidator($contentTypeRegistry, $fieldTypeRegistry);
-        });
-        $this->container->singleton(EntryService::class, function () use ($contentTypeRegistry, $fieldTypeRegistry): EntryService {
-            return new EntryService(
-                $this->container->get(ContentEntryRepository::class),
-                $this->container->get(ContentTypeRepository::class),
-                $contentTypeRegistry,
-                $fieldTypeRegistry,
-                $this->container->get(EntryValidator::class),
-                $this->container->get(RevisionService::class),
-            );
-        });
-        $this->container->singleton(SchemaService::class, function () use ($contentTypeRegistry): SchemaService {
-            return new SchemaService(
-                $this->container->get(SchemaLoader::class),
-                $contentTypeRegistry,
-                $this->container->get(ContentTypeRepository::class),
-            );
-        });
+        $this->container->singleton(RevisionService::class, fn() => new RevisionService($this->container->get(ContentRevisionRepository::class)));
+        $this->container->singleton(EntryValidator::class, fn() => new EntryValidator($contentTypeRegistry, $fieldTypeRegistry));
+        $this->container->singleton(EntryService::class, fn() => new EntryService(
+            $this->container->get(ContentEntryRepository::class),
+            $this->container->get(ContentTypeRepository::class),
+            $contentTypeRegistry,
+            $fieldTypeRegistry,
+            $this->container->get(EntryValidator::class),
+            $this->container->get(RevisionService::class),
+        ));
+        $this->container->singleton(SchemaService::class, fn() => new SchemaService(
+            $this->container->get(SchemaLoader::class),
+            $contentTypeRegistry,
+            $this->container->get(ContentTypeRepository::class),
+        ));
 
         // Register media service
-        $this->container->singleton(MediaRepository::class, function (): MediaRepository {
-            return new MediaRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(MediaService::class, function (): MediaService {
-            return new MediaService(
-                $this->container->get(MediaRepository::class),
-                $this->basePath . '/public/uploads',
-            );
-        });
+        $this->container->singleton(MediaService::class, fn() => new MediaService(
+            $this->container->get(MediaRepository::class),
+            $this->basePath . '/public/uploads',
+        ));
 
-        // Register settings service
-        $this->container->singleton(SettingsRepository::class, function (): SettingsRepository {
-            return new SettingsRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(SettingsService::class, function (): SettingsService {
-            return new SettingsService($this->container->get(SettingsRepository::class));
-        });
-
-        // Register menu service
-        $this->container->singleton(MenuRepository::class, function (): MenuRepository {
-            return new MenuRepository($this->container->get(Connection::class));
-        });
-        $this->container->singleton(MenuService::class, function (): MenuService {
-            return new MenuService($this->container->get(MenuRepository::class));
-        });
+        // Register settings and menu services
+        $this->container->singleton(SettingsService::class, fn() => new SettingsService($this->container->get(SettingsRepository::class)));
+        $this->container->singleton(MenuService::class, fn() => new MenuService($this->container->get(MenuRepository::class)));
 
         // Load schemas
         $this->container->get(SchemaLoader::class)->loadAll();
@@ -262,6 +218,7 @@ class App
         $viewRenderer->addExtension(new View\TwigExtension($this->container));
         $viewRenderer->addGlobal('app_name', $this->config->get('app.name', 'PHPBasePlate'));
         $viewRenderer->addGlobal('app_url', $this->config->get('app.url', ''));
+        $viewRenderer->addGlobal('storage_driver', $this->storageDriver);
 
         // Load routes
         $this->loadRoutes();
@@ -276,12 +233,10 @@ class App
                 throw new HttpException(404, "Route not found: {$request->method()} {$request->path()}");
             }
 
-            // Inject route params into request
             foreach ($route->getParams() as $key => $value) {
                 $request->setAttribute($key, $value);
             }
 
-            // Build middleware stack: global + route-specific
             $middleware = array_merge($this->globalMiddleware, $route->getMiddleware());
 
             $pipeline = new MiddlewarePipeline($this->container);
@@ -320,14 +275,83 @@ class App
         return $this->basePath;
     }
 
+    public function getStorageDriver(): string
+    {
+        return $this->storageDriver;
+    }
+
+    /**
+     * Determine storage driver: json (default), database, or auto (try DB, fall back to json).
+     */
+    private function resolveStorageDriver(): string
+    {
+        $driver = strtolower((string) $this->config->get('app.storage_driver', 'json'));
+
+        if ($driver === 'database') {
+            return 'database';
+        }
+
+        if ($driver === 'auto') {
+            try {
+                $conn = new Connection(
+                    host: $this->config->get('database.host', 'localhost'),
+                    port: (int) $this->config->get('database.port', 3306),
+                    database: $this->config->get('database.database', ''),
+                    username: $this->config->get('database.username', ''),
+                    password: $this->config->get('database.password', ''),
+                );
+                $conn->getPdo();
+                return 'database';
+            } catch (\Throwable) {
+                $this->container->get(Logger::class)->warning(
+                    'Database connection failed, falling back to JSON flat-file storage.',
+                );
+                return 'json';
+            }
+        }
+
+        return 'json';
+    }
+
+    /**
+     * Register all repositories based on the active storage driver.
+     */
+    private function registerRepositories(JsonStore $jsonStore): void
+    {
+        if ($this->storageDriver === 'database') {
+            // MySQL repositories
+            $this->container->singleton(UserRepository::class, fn() => new UserRepository($this->container->get(Connection::class)));
+            $this->container->singleton(RoleRepository::class, fn() => new RoleRepository($this->container->get(Connection::class)));
+            $this->container->singleton(PermissionRepository::class, fn() => new PermissionRepository($this->container->get(Connection::class)));
+            $this->container->singleton(ApiTokenRepository::class, fn() => new ApiTokenRepository($this->container->get(Connection::class)));
+            $this->container->singleton(ContentTypeRepository::class, fn() => new ContentTypeRepository($this->container->get(Connection::class)));
+            $this->container->singleton(ContentEntryRepository::class, fn() => new ContentEntryRepository($this->container->get(Connection::class)));
+            $this->container->singleton(ContentRevisionRepository::class, fn() => new ContentRevisionRepository($this->container->get(Connection::class)));
+            $this->container->singleton(MediaRepository::class, fn() => new MediaRepository($this->container->get(Connection::class)));
+            $this->container->singleton(SettingsRepository::class, fn() => new SettingsRepository($this->container->get(Connection::class)));
+            $this->container->singleton(MenuRepository::class, fn() => new MenuRepository($this->container->get(Connection::class)));
+        } else {
+            // JSON flat-file repositories
+            $this->container->singleton(UserRepository::class, fn() => new JsonUserRepository($jsonStore));
+            $this->container->singleton(RoleRepository::class, fn() => new JsonRoleRepository($jsonStore));
+            $this->container->singleton(PermissionRepository::class, fn() => new JsonPermissionRepository($jsonStore));
+            $this->container->singleton(ApiTokenRepository::class, fn() => new JsonApiTokenRepository($jsonStore));
+            $this->container->singleton(ContentTypeRepository::class, fn() => new JsonContentTypeRepository($jsonStore));
+            $this->container->singleton(ContentEntryRepository::class, fn() => new JsonContentEntryRepository($jsonStore));
+            $this->container->singleton(ContentRevisionRepository::class, fn() => new JsonContentRevisionRepository($jsonStore));
+            $this->container->singleton(MediaRepository::class, fn() => new JsonMediaRepository($jsonStore));
+            $this->container->singleton(SettingsRepository::class, fn() => new JsonSettingsRepository($jsonStore));
+            $this->container->singleton(MenuRepository::class, fn() => new JsonMenuRepository($jsonStore));
+        }
+    }
+
     private function loadRoutes(): void
     {
         $router = $this->router;
         $app = $this;
 
-        $routeFiles = ['web', 'admin', 'api'];
-
-        foreach ($routeFiles as $file) {
+        // Admin and API routes must load before web (which has catch-all /{slug})
+        foreach (['admin', 'api', 'web'] as $file) {
             $path = $this->basePath . '/routes/' . $file . '.php';
             if (file_exists($path)) {
                 require $path;
@@ -337,13 +361,11 @@ class App
 
     private function callHandler(mixed $handler, Request $request, array $params): Response
     {
-        // Closure handler
         if ($handler instanceof \Closure) {
             $result = $handler($request, ...array_values($params));
             return $this->prepareResponse($result);
         }
 
-        // [ControllerClass, method] array
         if (is_array($handler) && count($handler) === 2) {
             [$class, $method] = $handler;
             $controller = is_string($class) ? new $class($this->container) : $class;
@@ -351,7 +373,6 @@ class App
             return $this->prepareResponse($result);
         }
 
-        // "Controller@method" string
         if (is_string($handler) && str_contains($handler, '@')) {
             [$class, $method] = explode('@', $handler, 2);
             $controller = new $class($this->container);

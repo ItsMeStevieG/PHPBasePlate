@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace ItsMeStevieG\PHPBasePlate\Content\Services;
 
 use ItsMeStevieG\PHPBasePlate\Content\FieldTypes\FieldTypeRegistry;
-use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentEntryRepository;
-use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentTypeRepository;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\ContentTypeRegistry;
 use ItsMeStevieG\PHPBasePlate\Content\Validators\EntryValidator;
 use ItsMeStevieG\PHPBasePlate\Core\Support\Str;
@@ -14,8 +12,8 @@ use ItsMeStevieG\PHPBasePlate\Core\Support\Str;
 class EntryService
 {
     public function __construct(
-        private readonly ContentEntryRepository $entryRepo,
-        private readonly ContentTypeRepository $typeRepo,
+        private readonly object $entryRepo,
+        private readonly object $typeRepo,
         private readonly ContentTypeRegistry $typeRegistry,
         private readonly FieldTypeRegistry $fieldTypes,
         private readonly EntryValidator $validator,

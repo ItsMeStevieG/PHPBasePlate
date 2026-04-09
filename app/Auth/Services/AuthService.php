@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Auth\Services;
 
-use ItsMeStevieG\PHPBasePlate\Auth\Repositories\UserRepository;
 use ItsMeStevieG\PHPBasePlate\Core\Support\Session;
 
 class AuthService
@@ -12,7 +11,7 @@ class AuthService
     private ?array $user = null;
 
     public function __construct(
-        private readonly UserRepository $userRepo,
+        private readonly object $userRepo,
         private readonly Session $session,
     ) {
     }

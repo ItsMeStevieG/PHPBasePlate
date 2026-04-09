@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Auth\Services;
 
-use ItsMeStevieG\PHPBasePlate\Auth\Repositories\ApiTokenRepository;
-
 class ApiTokenService
 {
-    public function __construct(private readonly ApiTokenRepository $tokenRepo)
+    public function __construct(private readonly object $tokenRepo)
     {
     }
 

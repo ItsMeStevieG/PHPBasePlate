@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Media\Services;
 
-use ItsMeStevieG\PHPBasePlate\Media\Repositories\MediaRepository;
-
 class MediaService
 {
     private const ALLOWED_EXTENSIONS = [
@@ -17,7 +15,7 @@ class MediaService
     private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 
     public function __construct(
-        private readonly MediaRepository $repo,
+        private readonly object $repo,
         private readonly string $uploadPath,
     ) {
     }

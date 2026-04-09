@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Content\Services;
 
-use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentRevisionRepository;
-
 class RevisionService
 {
-    public function __construct(private readonly ContentRevisionRepository $revisionRepo)
+    public function __construct(private readonly object $revisionRepo)
     {
     }
 

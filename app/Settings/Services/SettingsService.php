@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Settings\Services;
 
-use ItsMeStevieG\PHPBasePlate\Settings\Repositories\SettingsRepository;
-
 class SettingsService
 {
     private array $cache = [];
 
-    public function __construct(private readonly SettingsRepository $repo)
+    public function __construct(private readonly object $repo)
     {
     }
 

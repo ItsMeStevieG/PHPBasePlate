@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Settings\Services;
 
-use ItsMeStevieG\PHPBasePlate\Settings\Repositories\MenuRepository;
-
 class MenuService
 {
-    public function __construct(private readonly MenuRepository $repo)
+    public function __construct(private readonly object $repo)
     {
     }
 

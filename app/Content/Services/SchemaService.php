@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Content\Services;
 
-use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentTypeRepository;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\ContentTypeRegistry;
 use ItsMeStevieG\PHPBasePlate\Content\Schema\SchemaLoader;
 
@@ -13,7 +12,7 @@ class SchemaService
     public function __construct(
         private readonly SchemaLoader $loader,
         private readonly ContentTypeRegistry $registry,
-        private readonly ContentTypeRepository $typeRepo,
+        private readonly object $typeRepo,
     ) {
     }
 

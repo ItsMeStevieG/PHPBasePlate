@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace ItsMeStevieG\PHPBasePlate\Auth\Services;
 
-use ItsMeStevieG\PHPBasePlate\Auth\Repositories\PermissionRepository;
-use ItsMeStevieG\PHPBasePlate\Auth\Repositories\RoleRepository;
-
 class RbacService
 {
     private array $cachedRoles = [];
     private array $cachedPermissions = [];
 
     public function __construct(
-        private readonly RoleRepository $roleRepo,
-        private readonly PermissionRepository $permissionRepo,
+        private readonly object $roleRepo,
+        private readonly object $permissionRepo,
     ) {
     }
 
