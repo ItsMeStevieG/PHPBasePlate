@@ -17,6 +17,17 @@ use ItsMeStevieG\PHPBasePlate\Auth\Repositories\UserRepository;
 use ItsMeStevieG\PHPBasePlate\Auth\Services\ApiTokenService;
 use ItsMeStevieG\PHPBasePlate\Auth\Services\AuthService;
 use ItsMeStevieG\PHPBasePlate\Auth\Services\RbacService;
+use ItsMeStevieG\PHPBasePlate\Content\FieldTypes\FieldTypeRegistry;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentEntryRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentRevisionRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Repositories\ContentTypeRepository;
+use ItsMeStevieG\PHPBasePlate\Content\Schema\ContentTypeRegistry;
+use ItsMeStevieG\PHPBasePlate\Content\Schema\SchemaLoader;
+use ItsMeStevieG\PHPBasePlate\Content\Schema\SchemaValidator;
+use ItsMeStevieG\PHPBasePlate\Content\Services\EntryService;
+use ItsMeStevieG\PHPBasePlate\Content\Services\RevisionService;
+use ItsMeStevieG\PHPBasePlate\Content\Services\SchemaService;
+use ItsMeStevieG\PHPBasePlate\Content\Validators\EntryValidator;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Env;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
@@ -156,6 +167,62 @@ class App
         $this->container->singleton(ApiTokenMiddleware::class, function (): ApiTokenMiddleware {
             return new ApiTokenMiddleware($this->container->get(ApiTokenService::class));
         });
+
+        // Register content engine
+        $fieldTypeRegistry = FieldTypeRegistry::createDefault();
+        $this->container->instance(FieldTypeRegistry::class, $fieldTypeRegistry);
+
+        $contentTypeRegistry = new ContentTypeRegistry();
+        $this->container->instance(ContentTypeRegistry::class, $contentTypeRegistry);
+
+        $schemaValidator = new SchemaValidator($fieldTypeRegistry);
+        $this->container->instance(SchemaValidator::class, $schemaValidator);
+
+        $this->container->singleton(SchemaLoader::class, function () use ($schemaValidator, $contentTypeRegistry, $fieldTypeRegistry): SchemaLoader {
+            return new SchemaLoader(
+                $this->basePath . '/resources/schemas',
+                $schemaValidator,
+                $contentTypeRegistry,
+                $fieldTypeRegistry,
+            );
+        });
+
+        $this->container->singleton(ContentTypeRepository::class, function (): ContentTypeRepository {
+            return new ContentTypeRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(ContentEntryRepository::class, function (): ContentEntryRepository {
+            return new ContentEntryRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(ContentRevisionRepository::class, function (): ContentRevisionRepository {
+            return new ContentRevisionRepository($this->container->get(Connection::class));
+        });
+
+        $this->container->singleton(RevisionService::class, function (): RevisionService {
+            return new RevisionService($this->container->get(ContentRevisionRepository::class));
+        });
+        $this->container->singleton(EntryValidator::class, function () use ($contentTypeRegistry, $fieldTypeRegistry): EntryValidator {
+            return new EntryValidator($contentTypeRegistry, $fieldTypeRegistry);
+        });
+        $this->container->singleton(EntryService::class, function () use ($contentTypeRegistry, $fieldTypeRegistry): EntryService {
+            return new EntryService(
+                $this->container->get(ContentEntryRepository::class),
+                $this->container->get(ContentTypeRepository::class),
+                $contentTypeRegistry,
+                $fieldTypeRegistry,
+                $this->container->get(EntryValidator::class),
+                $this->container->get(RevisionService::class),
+            );
+        });
+        $this->container->singleton(SchemaService::class, function () use ($contentTypeRegistry): SchemaService {
+            return new SchemaService(
+                $this->container->get(SchemaLoader::class),
+                $contentTypeRegistry,
+                $this->container->get(ContentTypeRepository::class),
+            );
+        });
+
+        // Load schemas
+        $this->container->get(SchemaLoader::class)->loadAll();
 
         // Load routes
         $this->loadRoutes();

@@ -1,0 +1,82 @@
+{
+    "name": "news",
+    "label": "News",
+    "mode": "collection",
+    "status_enabled": true,
+    "revisioning": true,
+    "api": {
+        "public_read": true,
+        "auth_write": true,
+        "allow_delete": true
+    },
+    "admin": {
+        "icon": "bi-newspaper",
+        "nav_group": "Content"
+    },
+    "fields": [
+        {
+            "name": "title",
+            "label": "Title",
+            "type": "text",
+            "required": true,
+            "searchable": true,
+            "sortable": true,
+            "config": {
+                "max_length": 255
+            }
+        },
+        {
+            "name": "slug",
+            "label": "Slug",
+            "type": "slug",
+            "required": true,
+            "config": {}
+        },
+        {
+            "name": "excerpt",
+            "label": "Excerpt",
+            "type": "textarea",
+            "required": false,
+            "searchable": true,
+            "config": {}
+        },
+        {
+            "name": "body",
+            "label": "Body",
+            "type": "richtext",
+            "required": true,
+            "searchable": true,
+            "config": {}
+        },
+        {
+            "name": "featured",
+            "label": "Featured",
+            "type": "boolean",
+            "required": false,
+            "filterable": true,
+            "config": {}
+        },
+        {
+            "name": "hero_image",
+            "label": "Hero Image",
+            "type": "image",
+            "required": false,
+            "config": {}
+        },
+        {
+            "name": "category",
+            "label": "Category",
+            "type": "select",
+            "required": false,
+            "filterable": true,
+            "config": {
+                "options": [
+                    {"label": "General", "value": "general"},
+                    {"label": "Announcements", "value": "announcements"},
+                    {"label": "Updates", "value": "updates"},
+                    {"label": "Community", "value": "community"}
+                ]
+            }
+        }
+    ]
+}

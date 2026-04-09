@@ -1,0 +1,67 @@
+{
+    "name": "page",
+    "label": "Pages",
+    "mode": "collection",
+    "status_enabled": true,
+    "revisioning": true,
+    "api": {
+        "public_read": true,
+        "auth_write": true,
+        "allow_delete": false
+    },
+    "admin": {
+        "icon": "bi-file-earmark-text",
+        "nav_group": "Content"
+    },
+    "fields": [
+        {
+            "name": "title",
+            "label": "Title",
+            "type": "text",
+            "required": true,
+            "searchable": true,
+            "sortable": true,
+            "config": {
+                "max_length": 255
+            }
+        },
+        {
+            "name": "slug",
+            "label": "Slug",
+            "type": "slug",
+            "required": true,
+            "config": {}
+        },
+        {
+            "name": "body",
+            "label": "Body",
+            "type": "richtext",
+            "required": true,
+            "searchable": true,
+            "config": {}
+        },
+        {
+            "name": "seo_title",
+            "label": "SEO Title",
+            "type": "text",
+            "required": false,
+            "config": {
+                "max_length": 70
+            }
+        },
+        {
+            "name": "seo_description",
+            "label": "SEO Description",
+            "type": "textarea",
+            "required": false,
+            "config": {}
+        },
+        {
+            "name": "hero_image",
+            "label": "Hero Image",
+            "type": "image",
+            "required": false,
+            "config": {}
+        }
+    ]
+}
