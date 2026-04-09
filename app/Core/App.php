@@ -224,6 +224,12 @@ class App
         // Load schemas
         $this->container->get(SchemaLoader::class)->loadAll();
 
+        // Register Twig extension
+        $viewRenderer = $this->container->get(ViewRenderer::class);
+        $viewRenderer->addExtension(new View\TwigExtension($this->container));
+        $viewRenderer->addGlobal('app_name', $this->config->get('app.name', 'PHPBasePlate'));
+        $viewRenderer->addGlobal('app_url', $this->config->get('app.url', ''));
+
         // Load routes
         $this->loadRoutes();
     }

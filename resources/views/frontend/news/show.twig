@@ -1,0 +1,39 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<article class="py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/news">News</a></li>
+            <li class="breadcrumb-item active">{{ entry.title }}</li>
+        </ol>
+    </nav>
+
+    <h1>{{ entry.title }}</h1>
+
+    <div class="text-muted mb-4">
+        {% if entry.published_at %}
+        <small>Published {{ entry.published_at | time_ago }}</small>
+        {% endif %}
+        {% if entry.payload.category is defined and entry.payload.category %}
+         &middot; <span class="badge bg-secondary">{{ entry.payload.category }}</span>
+        {% endif %}
+    </div>
+
+    {% if entry.payload.excerpt is defined and entry.payload.excerpt %}
+    <p class="lead">{{ entry.payload.excerpt }}</p>
+    {% endif %}
+
+    {% if entry.payload.body is defined %}
+    <div class="content mt-4">
+        {{ entry.payload.body | raw }}
+    </div>
+    {% endif %}
+
+    <hr class="my-4">
+    <a href="/news" class="btn btn-outline-primary">&larr; Back to News</a>
+</article>
+{% endblock %}

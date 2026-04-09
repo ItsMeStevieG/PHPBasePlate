@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
-use ItsMeStevieG\PHPBasePlate\Core\Http\Request;
-use ItsMeStevieG\PHPBasePlate\Core\Http\Response;
+use ItsMeStevieG\PHPBasePlate\Frontend\Controllers\HomeController;
+use ItsMeStevieG\PHPBasePlate\Frontend\Controllers\NewsController;
+use ItsMeStevieG\PHPBasePlate\Frontend\Controllers\PageController;
 
 /** @var \ItsMeStevieG\PHPBasePlate\Core\Routing\Router $router */
 
-$router->get('/', function (Request $request): Response {
-    return new Response(view('frontend/home', [
-        'title' => config('app.name', 'PHPBasePlate'),
-    ]));
-}, 'home');
+// Home
+$router->get('/', [HomeController::class, 'index'], 'home');
+
+// News
+$router->get('/news', [NewsController::class, 'index'], 'news.index');
+$router->get('/news/{slug}', [NewsController::class, 'show'], 'news.show');
+
+// Pages (catch-all for slugs - must be last)
+$router->get('/{slug}', [PageController::class, 'show'], 'page.show');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ItsMeStevieG\PHPBasePlate\Core\View;
 
 use Twig\Environment;
+use Twig\Extension\AbstractExtension;
 use Twig\Loader\FilesystemLoader;
 
 class ViewRenderer
@@ -21,6 +22,11 @@ class ViewRenderer
         }
 
         $this->twig = new Environment($loader, $options);
+    }
+
+    public function addExtension(AbstractExtension $extension): void
+    {
+        $this->twig->addExtension($extension);
     }
 
     public function render(string $template, array $data = []): string

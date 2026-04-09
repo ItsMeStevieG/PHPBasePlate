@@ -4,10 +4,37 @@
 
 {% block content %}
 <div class="text-center py-5">
-    <h1 class="display-4">{{ title }}</h1>
+    <h1 class="display-4">{{ app_name }}</h1>
     <p class="lead text-muted">A reusable, API-first PHP content platform.</p>
     <hr class="my-4">
-    <p>V3 core kernel is running.</p>
-    <a href="/api/health" class="btn btn-primary">API Health Check</a>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="/news" class="btn btn-primary">News</a>
+        <a href="/api/health" class="btn btn-outline-secondary">API Health</a>
+    </div>
 </div>
+
+{% set latest_news = content_list('news', 3) %}
+{% if latest_news is not empty %}
+<div class="mt-5">
+    <h3>Latest News</h3>
+    <div class="row">
+        {% for entry in latest_news %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ entry.title }}</h5>
+                    <p class="card-text text-muted">
+                        {{ (entry.payload.excerpt | default(entry.summary | default(''))) | excerpt(120) }}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="/news/{{ entry.slug }}" class="btn btn-sm btn-outline-primary">Read more</a>
+                    <small class="text-muted float-end">{{ entry.published_at | time_ago }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}
