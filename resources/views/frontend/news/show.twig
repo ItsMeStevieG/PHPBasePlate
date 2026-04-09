@@ -29,7 +29,7 @@
 
     {% if entry.payload.body is defined %}
     <div class="content mt-4">
-        {{ entry.payload.body | raw }}
+        {{ entry.payload.body | safe_html }}
     </div>
     {% endif %}
 

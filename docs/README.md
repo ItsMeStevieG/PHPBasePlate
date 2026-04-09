@@ -31,6 +31,12 @@ This folder contains the technical planning documents for rebuilding PHPBasePlat
 9. [09-deployment-and-environments.md](09-deployment-and-environments.md)
    - Deployment model for shared hosting and VPS, environment handling, release process, and operational checks.
 
+10. [10-installation-guide.md](10-installation-guide.md)
+    - Step-by-step installation, Apache/Nginx configuration, production checklist, and troubleshooting.
+
+11. [11-user-guide.md](11-user-guide.md)
+    - Content types, field types, admin panel, REST API, Twig functions, CLI tools, and extending the platform.
+
 ## Stack Lock
 
 PHPBasePlate V3 is intentionally designed around the following stack:

@@ -41,6 +41,7 @@ class TwigExtension extends AbstractExtension
         return [
             new TwigFilter('excerpt', [$this, 'excerpt']),
             new TwigFilter('time_ago', [$this, 'timeAgo']),
+            new TwigFilter('safe_html', [$this, 'safeHtml'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -126,5 +127,28 @@ class TwigExtension extends AbstractExtension
     public function settingsGroup(string $group): array
     {
         return $this->container->get(SettingsService::class)->getGroup($group);
+    }
+
+    /**
+     * Sanitise HTML content - allows safe tags only, strips dangerous attributes.
+     */
+    public function safeHtml(?string $html): string
+    {
+        if ($html === null || $html === '') {
+            return '';
+        }
+
+        $allowed = '<p><br><strong><b><em><i><u><s><a><ul><ol><li><h1><h2><h3><h4><h5><h6>'
+            . '<blockquote><pre><code><hr><table><thead><tbody><tr><th><td><img><figure><figcaption><div><span>';
+
+        $clean = strip_tags($html, $allowed);
+
+        // Remove dangerous attributes (on*, style with expressions, javascript: URLs)
+        $clean = preg_replace('/\s+on\w+\s*=\s*["\'][^"\']*["\']/i', '', $clean);
+        $clean = preg_replace('/\s+on\w+\s*=\s*\S+/i', '', $clean);
+        $clean = preg_replace('/href\s*=\s*["\']?\s*javascript\s*:/i', 'href="removed:', $clean);
+        $clean = preg_replace('/src\s*=\s*["\']?\s*javascript\s*:/i', 'src="removed:', $clean);
+
+        return $clean;
     }
 }

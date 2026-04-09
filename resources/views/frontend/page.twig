@@ -14,7 +14,7 @@
 
     {% if page.payload.body is defined %}
     <div class="content mt-4">
-        {{ page.payload.body | raw }}
+        {{ page.payload.body | safe_html }}
     </div>
     {% endif %}
 </article>
