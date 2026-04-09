@@ -38,59 +38,60 @@ $driver = $app->getStorageDriver();
 echo "Storage driver: \033[36m{$driver}\033[0m\n\n";
 
 try {
-    if ($driver === 'database') {
-        // --- DATABASE SETUP ---
-        $db = $container->get(Connection::class);
+    $store = $container->get(JsonStore::class);
+    $step = 1;
 
-        echo "[1/4] Testing database connection...\n";
-        $db->getPdo();
-        echo "  Database connection OK.\n\n";
+    // --- ALWAYS seed JSON files (serves as baseline + failover snapshot) ---
+    echo "[{$step}] Seeding JSON flat files (storage/data/)...\n";
+    seedJsonData($store);
+    $step++;
 
-        echo "[2/4] Running migrations...\n";
-        $migrator = new Migrator($db);
-        $executed = $migrator->run($basePath . '/database/migrations');
+    // --- DATABASE setup (if configured) ---
+    if ($driver === 'database' || $driver === 'auto') {
+        try {
+            $db = $container->get(Connection::class);
 
-        if (empty($executed)) {
-            echo "  Nothing to migrate.\n\n";
-        } else {
-            foreach ($executed as $name) {
-                echo "  Migrated: {$name}\n";
+            echo "\n[{$step}] Testing database connection...\n";
+            $db->getPdo();
+            echo "  Database connection OK.\n";
+            $step++;
+
+            echo "\n[{$step}] Running migrations...\n";
+            $migrator = new Migrator($db);
+            $executed = $migrator->run($basePath . '/database/migrations');
+            if (empty($executed)) {
+                echo "  Nothing to migrate.\n";
+            } else {
+                foreach ($executed as $name) {
+                    echo "  Migrated: {$name}\n";
+                }
             }
-            echo "\n";
+            $step++;
+
+            echo "\n[{$step}] Running database seeders...\n";
+            $seeder = new Seeder($db);
+            $executed = $seeder->run($basePath . '/database/seeds');
+            foreach ($executed as $name) {
+                echo "  Seeded: {$name}\n";
+            }
+            $step++;
+        } catch (\PDOException $e) {
+            if ($driver === 'auto') {
+                echo "\n  \033[33mDatabase not available - skipping DB setup.\033[0m\n";
+                echo "  ({$e->getMessage()})\n";
+                echo "  JSON flat files will be used.\n";
+            } else {
+                throw $e;
+            }
         }
+    }
 
-        echo "[3/4] Running seeders...\n";
-        $seeder = new Seeder($db);
-        $executed = $seeder->run($basePath . '/database/seeds');
-        foreach ($executed as $name) {
-            echo "  Seeded: {$name}\n";
-        }
-        echo "\n";
-
-        echo "[4/4] Syncing content schemas to database...\n";
-        $schemaService = $container->get(SchemaService::class);
-        $result = $schemaService->loadAndSync(syncToDb: true);
-        foreach ($result['loaded'] as $name) {
-            echo "  Synced: {$name}\n";
-        }
-
-    } else {
-        // --- JSON FLAT-FILE SETUP ---
-        $store = $container->get(JsonStore::class);
-
-        echo "[1/3] Initialising JSON storage in storage/data/...\n";
-        echo "  Storage path: {$store->getBasePath()}\n\n";
-
-        echo "[2/3] Seeding default data...\n";
-        seedJsonData($store);
-        echo "\n";
-
-        echo "[3/3] Syncing content schemas...\n";
-        $schemaService = $container->get(SchemaService::class);
-        $result = $schemaService->loadAndSync(syncToDb: true);
-        foreach ($result['loaded'] as $name) {
-            echo "  Synced: {$name}\n";
-        }
+    // --- Sync content schemas ---
+    echo "\n[{$step}] Syncing content schemas...\n";
+    $schemaService = $container->get(SchemaService::class);
+    $result = $schemaService->loadAndSync(syncToDb: true);
+    foreach ($result['loaded'] as $name) {
+        echo "  Synced: {$name}\n";
     }
 
     echo "\n" . str_repeat('=', 40) . "\n";

@@ -95,6 +95,18 @@ php bin/setup.php
 
 Set `STORAGE_DRIVER=auto` to try the database first and automatically fall back to JSON flat files if the database connection fails. Useful for development or resilience.
 
+### Keeping them in sync
+
+JSON files act as a "last known good" snapshot. Use the sync tool to keep them current:
+
+```bash
+php bin/sync.php db-to-json   # Snapshot DB to JSON (run after making changes in DB mode)
+php bin/sync.php json-to-db   # Push JSON data into DB (run when switching to database)
+php bin/sync.php status       # Compare record counts in both stores
+```
+
+Setup (`php bin/setup.php`) always seeds JSON files regardless of the active driver, so failover always has baseline data.
+
 ## Creating Content Types
 
 Add a JSON file to `resources/schemas/`:
@@ -197,10 +209,12 @@ PHPBasePlate/
 
 ```bash
 php bin/check.php           # Environment check (PHP, extensions, paths, schemas)
-php bin/setup.php           # Full setup: migrate + seed + schema sync
-php bin/migrate.php migrate # Run migrations only
-php bin/migrate.php seed    # Run seeds only
-php bin/migrate.php all     # Both
+php bin/setup.php           # Full setup: always seeds JSON + DB if configured
+php bin/migrate.php migrate # Run database migrations only
+php bin/migrate.php seed    # Run database seeds only
+php bin/sync.php status     # Show record counts in both JSON and database
+php bin/sync.php db-to-json # Snapshot database to JSON (failover backup)
+php bin/sync.php json-to-db # Import JSON data into database
 ```
 
 ## Testing
