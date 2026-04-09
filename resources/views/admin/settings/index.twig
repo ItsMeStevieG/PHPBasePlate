@@ -1,0 +1,27 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-gear"></i> Settings</h2>
+
+{% if groups is empty %}
+<p class="text-muted mt-3">No settings groups configured. Run seeders to create default groups.</p>
+{% else %}
+<div class="row mt-4">
+    {% for group in groups %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ group.label }}</h5>
+                <p class="card-text text-muted small">{{ group.description | default('') }}</p>
+                <a href="/admin/settings/{{ group.machine_name }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

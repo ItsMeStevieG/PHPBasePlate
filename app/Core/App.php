@@ -28,6 +28,12 @@ use ItsMeStevieG\PHPBasePlate\Content\Services\EntryService;
 use ItsMeStevieG\PHPBasePlate\Content\Services\RevisionService;
 use ItsMeStevieG\PHPBasePlate\Content\Services\SchemaService;
 use ItsMeStevieG\PHPBasePlate\Content\Validators\EntryValidator;
+use ItsMeStevieG\PHPBasePlate\Media\Repositories\MediaRepository;
+use ItsMeStevieG\PHPBasePlate\Media\Services\MediaService;
+use ItsMeStevieG\PHPBasePlate\Settings\Repositories\MenuRepository;
+use ItsMeStevieG\PHPBasePlate\Settings\Repositories\SettingsRepository;
+use ItsMeStevieG\PHPBasePlate\Settings\Services\MenuService;
+use ItsMeStevieG\PHPBasePlate\Settings\Services\SettingsService;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Env;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
@@ -219,6 +225,33 @@ class App
                 $contentTypeRegistry,
                 $this->container->get(ContentTypeRepository::class),
             );
+        });
+
+        // Register media service
+        $this->container->singleton(MediaRepository::class, function (): MediaRepository {
+            return new MediaRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(MediaService::class, function (): MediaService {
+            return new MediaService(
+                $this->container->get(MediaRepository::class),
+                $this->basePath . '/public/uploads',
+            );
+        });
+
+        // Register settings service
+        $this->container->singleton(SettingsRepository::class, function (): SettingsRepository {
+            return new SettingsRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(SettingsService::class, function (): SettingsService {
+            return new SettingsService($this->container->get(SettingsRepository::class));
+        });
+
+        // Register menu service
+        $this->container->singleton(MenuRepository::class, function (): MenuRepository {
+            return new MenuRepository($this->container->get(Connection::class));
+        });
+        $this->container->singleton(MenuService::class, function (): MenuService {
+            return new MenuService($this->container->get(MenuRepository::class));
         });
 
         // Load schemas

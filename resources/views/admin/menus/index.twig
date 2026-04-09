@@ -1,0 +1,30 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}Menus{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-list-nested"></i> Menus</h2>
+
+{% if menus is empty %}
+<p class="text-muted mt-3">No menus configured. Run seeders to create default menus.</p>
+{% else %}
+<div class="row mt-4">
+    {% for menu in menus %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ menu.label }}</h5>
+                <p class="card-text text-muted small">{{ menu.description | default('') }}</p>
+                <code class="small">{{ menu.machine_name }}</code>
+            </div>
+            <div class="card-footer">
+                <a href="/admin/menus/{{ menu.machine_name }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Edit Items
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

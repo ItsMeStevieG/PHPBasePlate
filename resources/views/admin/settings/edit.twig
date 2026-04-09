@@ -1,0 +1,50 @@
+{% extends "layouts/admin.twig" %}
+
+{% block title %}{{ group.label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-gear"></i> {{ group.label }}</h2>
+    <a href="/admin/settings" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<form method="post" action="/admin/settings/{{ group.machine_name }}">
+    <input type="hidden" name="_token" value="{{ csrf_token }}">
+
+    <div class="card">
+        <div class="card-body">
+            {% for item in group.items %}
+            <div class="mb-3">
+                <label for="setting_{{ item.machine_name }}" class="form-label">{{ item.label }}</label>
+
+                {% if item.field_type == 'textarea' %}
+                <textarea name="{{ item.machine_name }}" id="setting_{{ item.machine_name }}"
+                          class="form-control" rows="3">{{ item.value | default('') }}</textarea>
+
+                {% elseif item.field_type == 'boolean' %}
+                <div class="form-check form-switch">
+                    <input type="hidden" name="{{ item.machine_name }}" value="0">
+                    <input type="checkbox" name="{{ item.machine_name }}" id="setting_{{ item.machine_name }}"
+                           class="form-check-input" value="1" {{ item.value ? 'checked' : '' }}>
+                </div>
+
+                {% elseif item.is_secret %}
+                <input type="password" name="{{ item.machine_name }}" id="setting_{{ item.machine_name }}"
+                       class="form-control" value="{{ item.value | default('') }}" autocomplete="off">
+
+                {% else %}
+                <input type="text" name="{{ item.machine_name }}" id="setting_{{ item.machine_name }}"
+                       class="form-control" value="{{ item.value | default('') }}">
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">
+        <i class="bi bi-save"></i> Save Settings
+    </button>
+</form>
+{% endblock %}

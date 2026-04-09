@@ -9,6 +9,9 @@ use ItsMeStevieG\PHPBasePlate\Auth\Middleware\AuthMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\CsrfMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\GuestMiddleware;
 use ItsMeStevieG\PHPBasePlate\Auth\Middleware\StartSessionMiddleware;
+use ItsMeStevieG\PHPBasePlate\Media\Controllers\MediaController;
+use ItsMeStevieG\PHPBasePlate\Settings\Controllers\MenuController;
+use ItsMeStevieG\PHPBasePlate\Settings\Controllers\SettingsController;
 
 /** @var \ItsMeStevieG\PHPBasePlate\Core\Routing\Router $router */
 
@@ -28,6 +31,25 @@ $router->group(['prefix' => '/admin', 'middleware' => [StartSessionMiddleware::c
 
     // Logout
     $router->post('/logout', [LoginController::class, 'logout'], 'admin.logout')
+        ->middleware([CsrfMiddleware::class]);
+
+    // Media
+    $router->get('/media', [MediaController::class, 'index'], 'admin.media.index');
+    $router->post('/media/upload', [MediaController::class, 'upload'], 'admin.media.upload')
+        ->middleware([CsrfMiddleware::class]);
+    $router->post('/media/{id}/delete', [MediaController::class, 'delete'], 'admin.media.delete')
+        ->middleware([CsrfMiddleware::class]);
+
+    // Settings
+    $router->get('/settings', [SettingsController::class, 'index'], 'admin.settings.index');
+    $router->get('/settings/{group}', [SettingsController::class, 'edit'], 'admin.settings.edit');
+    $router->post('/settings/{group}', [SettingsController::class, 'update'], 'admin.settings.update')
+        ->middleware([CsrfMiddleware::class]);
+
+    // Menus
+    $router->get('/menus', [MenuController::class, 'index'], 'admin.menus.index');
+    $router->get('/menus/{menu}', [MenuController::class, 'edit'], 'admin.menus.edit');
+    $router->post('/menus/{menu}', [MenuController::class, 'update'], 'admin.menus.update')
         ->middleware([CsrfMiddleware::class]);
 
     // Content CRUD

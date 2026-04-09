@@ -9,6 +9,8 @@ use ItsMeStevieG\PHPBasePlate\Content\Services\EntryService;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
 use ItsMeStevieG\PHPBasePlate\Core\Routing\Router;
+use ItsMeStevieG\PHPBasePlate\Settings\Services\MenuService;
+use ItsMeStevieG\PHPBasePlate\Settings\Services\SettingsService;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 use Twig\TwigFilter;
@@ -28,6 +30,9 @@ class TwigExtension extends AbstractExtension
             new TwigFunction('content_entry', [$this, 'contentEntry']),
             new TwigFunction('content_types', [$this, 'contentTypes']),
             new TwigFunction('asset', [$this, 'asset']),
+            new TwigFunction('menu', [$this, 'menu']),
+            new TwigFunction('setting', [$this, 'setting']),
+            new TwigFunction('settings_group', [$this, 'settingsGroup']),
         ];
     }
 
@@ -106,5 +111,20 @@ class TwigExtension extends AbstractExtension
         }
 
         return date('M j, Y', $time);
+    }
+
+    public function menu(string $machineName): array
+    {
+        return $this->container->get(MenuService::class)->getMenuItems($machineName);
+    }
+
+    public function setting(string $group, string $key, mixed $default = null): mixed
+    {
+        return $this->container->get(SettingsService::class)->get($group, $key, $default);
+    }
+
+    public function settingsGroup(string $group): array
+    {
+        return $this->container->get(SettingsService::class)->getGroup($group);
     }
 }
