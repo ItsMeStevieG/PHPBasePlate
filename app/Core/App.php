@@ -48,6 +48,7 @@ use ItsMeStevieG\PHPBasePlate\Core\Config\Config;
 use ItsMeStevieG\PHPBasePlate\Core\Config\Env;
 use ItsMeStevieG\PHPBasePlate\Core\Container\Container;
 use ItsMeStevieG\PHPBasePlate\Core\Database\Connection;
+use ItsMeStevieG\PHPBasePlate\Core\Database\DualWriteProxy;
 use ItsMeStevieG\PHPBasePlate\Core\Database\JsonStore;
 use ItsMeStevieG\PHPBasePlate\Core\Exceptions\ExceptionHandler;
 use ItsMeStevieG\PHPBasePlate\Core\Exceptions\HttpException;
@@ -315,23 +316,30 @@ class App
 
     /**
      * Register all repositories based on the active storage driver.
+     *
+     * When using database driver, a DualWriteProxy wraps each repository
+     * so writes go to both MySQL (primary) and JSON (secondary) automatically.
+     * This keeps the JSON files as a live "last known good" snapshot.
      */
     private function registerRepositories(JsonStore $jsonStore): void
     {
         if ($this->storageDriver === 'database') {
-            // MySQL repositories
-            $this->container->singleton(UserRepository::class, fn() => new UserRepository($this->container->get(Connection::class)));
-            $this->container->singleton(RoleRepository::class, fn() => new RoleRepository($this->container->get(Connection::class)));
-            $this->container->singleton(PermissionRepository::class, fn() => new PermissionRepository($this->container->get(Connection::class)));
-            $this->container->singleton(ApiTokenRepository::class, fn() => new ApiTokenRepository($this->container->get(Connection::class)));
-            $this->container->singleton(ContentTypeRepository::class, fn() => new ContentTypeRepository($this->container->get(Connection::class)));
-            $this->container->singleton(ContentEntryRepository::class, fn() => new ContentEntryRepository($this->container->get(Connection::class)));
-            $this->container->singleton(ContentRevisionRepository::class, fn() => new ContentRevisionRepository($this->container->get(Connection::class)));
-            $this->container->singleton(MediaRepository::class, fn() => new MediaRepository($this->container->get(Connection::class)));
-            $this->container->singleton(SettingsRepository::class, fn() => new SettingsRepository($this->container->get(Connection::class)));
-            $this->container->singleton(MenuRepository::class, fn() => new MenuRepository($this->container->get(Connection::class)));
+            $db = fn() => $this->container->get(Connection::class);
+            $logger = fn() => $this->container->get(Logger::class);
+
+            // Database primary, JSON secondary - writes go to both
+            $this->container->singleton(UserRepository::class, fn() => new DualWriteProxy(new UserRepository($db()), new JsonUserRepository($jsonStore), $logger()));
+            $this->container->singleton(RoleRepository::class, fn() => new DualWriteProxy(new RoleRepository($db()), new JsonRoleRepository($jsonStore), $logger()));
+            $this->container->singleton(PermissionRepository::class, fn() => new DualWriteProxy(new PermissionRepository($db()), new JsonPermissionRepository($jsonStore), $logger()));
+            $this->container->singleton(ApiTokenRepository::class, fn() => new DualWriteProxy(new ApiTokenRepository($db()), new JsonApiTokenRepository($jsonStore), $logger()));
+            $this->container->singleton(ContentTypeRepository::class, fn() => new DualWriteProxy(new ContentTypeRepository($db()), new JsonContentTypeRepository($jsonStore), $logger()));
+            $this->container->singleton(ContentEntryRepository::class, fn() => new DualWriteProxy(new ContentEntryRepository($db()), new JsonContentEntryRepository($jsonStore), $logger()));
+            $this->container->singleton(ContentRevisionRepository::class, fn() => new DualWriteProxy(new ContentRevisionRepository($db()), new JsonContentRevisionRepository($jsonStore), $logger()));
+            $this->container->singleton(MediaRepository::class, fn() => new DualWriteProxy(new MediaRepository($db()), new JsonMediaRepository($jsonStore), $logger()));
+            $this->container->singleton(SettingsRepository::class, fn() => new DualWriteProxy(new SettingsRepository($db()), new JsonSettingsRepository($jsonStore), $logger()));
+            $this->container->singleton(MenuRepository::class, fn() => new DualWriteProxy(new MenuRepository($db()), new JsonMenuRepository($jsonStore), $logger()));
         } else {
-            // JSON flat-file repositories
+            // JSON-only mode
             $this->container->singleton(UserRepository::class, fn() => new JsonUserRepository($jsonStore));
             $this->container->singleton(RoleRepository::class, fn() => new JsonRoleRepository($jsonStore));
             $this->container->singleton(PermissionRepository::class, fn() => new JsonPermissionRepository($jsonStore));
